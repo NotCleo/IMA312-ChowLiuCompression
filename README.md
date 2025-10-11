@@ -20,7 +20,6 @@ $$\max_{\theta_T} \log \prod_{i=1}^{n} p(x_1, \ldots, x_k^{(i)} ; T, \theta_T)$$
 
 Given the tree structure $T$ (which pairs of variables are connected), find the parameter values $\theta_T$ (the probabilities or conditional probabilities for each node/edge) that make the observed data most likely.
 
-For the i'th sample from data $ x^{(i)} = (x_1^{(i)}, \ldots, x_k^{(i)}) $:
 
 $$\max_{\theta_T} \log \prod_{i=1}^{n} p(x_1^{(i)}, \ldots, x_k^{(i)} ; T, \theta_T)$$
 
