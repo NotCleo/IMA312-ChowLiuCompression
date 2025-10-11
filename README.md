@@ -7,37 +7,6 @@ Structured Learning with Undirected Tree Models
 
 We have $k$ random variables $X_1, X_2, \ldots, X_k$, which form the nodes of an undirected tree model.  What tree $T$ do we use?
 
-Each random variable $X_j$ represents a feature or attribute in the dataset.
-
-For example, in the context of server logs:
-
-\begin{aligned}
-X_1 &: \text{Hour of the day (0-23)} \\
-X_2 &: \text{Request type (GET, POST, etc.)} \\
-X_3 &: \text{Response code (200, 404, 500, etc.)} \\
-X_4 &: \text{Bytes transferred} \\
-X_5 &: \text{User ID (anonymized or clustered)}
-\end{aligned}
-
-
-We collect $n$ samples (log entries), where each sample corresponds to one observation of all $k$ variables.  
-The $i$-th observation is represented as:
-$(x_1^{(i)}, x_2^{(i)}, \ldots, x_k^{(i)}),
-\quad i = 1, 2, \ldots, n$
-Each $x_j^{(i)}$ denotes the value taken by random variable $X_j$ in the $i$-th sample.
-
-Thus, the dataset can be represented as an $n \times k$ matrix:
-$$
-{X} =
-\begin{bmatrix}
-x_1^{(1)} & x_2^{(1)} & \cdots & x_k^{(1)} \\
-x_1^{(2)} & x_2^{(2)} & \cdots & x_k^{(2)} \\
-\vdots & \vdots & \ddots & \vdots \\
-x_1^{(n)} & x_2^{(n)} & \cdots & x_k^{(n)}
-\end{bmatrix}
-$$
-where each row represents one log record and each column represents one feature.
-
 
 To pick the best tree,
 
