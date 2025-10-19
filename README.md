@@ -7,7 +7,7 @@ Team Members :
 - Mukund Rathi
 - Ritishaa Anand
 
-We have implemented a research paper and benchmarked it against current industry standard compression technique and we documented our entire experiment in \text{report.txt}
+We have implemented a research paper and benchmarked it against current industry standard compression technique and we documented our entire experiment in $\text{report.txt}$
 
 The following concepts from the course materials were used;
 
