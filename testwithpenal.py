@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import os
 import io
 import gzip
@@ -21,12 +20,25 @@ PROTOCOL_POOL = ['HTTP/1.1', 'HTTP/2.0']
 REFERER_POOL = ["-", "https://www.google.com/", "https://www.bing.com/", "https://example.com/", "https://facebook.com/"]
 USER_AGENT_POOL = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.864.48 Safari/537.36 Edg/91.0.864.48", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"]
 
+
+
+# we come here first from main()
 def generate_synthetic_logs(n_rows=5000, corr_strength=0.5, filename="log.csv"):
+
+    #from random, we generate a seed of 42, meaning “Start the random number generator from position #42 in its enormous internal sequence.”
     np.random.seed(42)
     random.seed(42)
+
+
+
+    # initialized a few timestamps
     base_time = datetime(2023, 1, 1, 0, 0, 0)
     timestamps = [base_time + timedelta(seconds=random.randint(1, 3600)) for _ in range(n_rows)]
     hours = np.array([t.hour for t in timestamps])
+
+
+
+    #now from above global declaration we make random IPs, URLS, Users, methods, protocols, referers and agents
     ips = np.random.choice(IP_POOL, n_rows)
     users = np.random.choice(USER_POOL, n_rows)
     methods = np.random.choice(METHOD_POOL, n_rows, p=[0.7, 0.2, 0.05, 0.05])
@@ -34,9 +46,19 @@ def generate_synthetic_logs(n_rows=5000, corr_strength=0.5, filename="log.csv"):
     protocols = np.random.choice(PROTOCOL_POOL, n_rows, p=[0.8, 0.2])
     referers = np.random.choice(REFERER_POOL, n_rows, p=[0.4, 0.2, 0.2, 0.1, 0.1])
     user_agents = np.random.choice(USER_AGENT_POOL, n_rows)
+
+
+
+    #since we generated the source/input ips, users, ...., we need to make a realistic server log by keeping track of status, latency and throughput
     statuses = []
     bytes_sent = []
     latency_ms = []
+
+
+    #now we loop over a few methods and timestamps and create a random (yet mostly deterministic) correlated table entries
+    # the network status, latency and throughput is calculated once we define method, user pools
+    # like 404 means error, so throughtput and latency should be absolutely low as opposed to a code 500 
+
     for i in range(n_rows):
         m = methods[i]
         h = hours[i]
@@ -53,6 +75,9 @@ def generate_synthetic_logs(n_rows=5000, corr_strength=0.5, filename="log.csv"):
         statuses.append(status)
         bytes_sent.append(bytes_val)
         latency_ms.append(lat_val)
+
+    
+    #now when we start csvs of course pandas library comes into the picture, we made a dataframe of all our columns and populate with its entries generated and stored in lists from above
     df = pd.DataFrame({
         "timestamp": [t.strftime("%Y-%m-%d %H:%M:%S") for t in timestamps],
         "ip": ips,
@@ -70,6 +95,9 @@ def generate_synthetic_logs(n_rows=5000, corr_strength=0.5, filename="log.csv"):
     print(f"\033[92m[+] Generated {filename}\033[0m  ({n_rows} rows, corr_strength={corr_strength:.2f})")
     return df
 
+
+
+# math math math!
 def compute_empirical_probabilities(df, col1, col2=None):
     if col2 is None:
         counts = df[col1].value_counts()
@@ -80,6 +108,9 @@ def compute_empirical_probabilities(df, col1, col2=None):
         joint = joint / joint.sum()
         return joint.to_dict()
 
+
+
+# math math math!
 def encoding_cost_bits(df, col1, col2):
     pxy = compute_empirical_probabilities(df, col1, col2)
     pickled = pickle.dumps(pxy)
@@ -87,6 +118,8 @@ def encoding_cost_bits(df, col1, col2):
     bytes_size = len(compressed)
     return bytes_size * 8
 
+
+# math math math!
 def mutual_information(df, col1, col2):
     if col1 == col2:
         return 0.0
@@ -99,11 +132,12 @@ def mutual_information(df, col1, col2):
             mi += p_xy * math.log(p_xy / (px.get(x, 1e-12) * py.get(y, 1e-12) + 1e-12) + 1e-12, 2)
     return max(mi, 0.0)
 
+
+# math math math!
 def learn_chow_liu_tree(df):
     cols = df.columns.tolist()
     G = nx.Graph()
     n = len(df)
-    print("   ↳ Computing pairwise penalized mutual information...")
     n_cols = len(cols)
     for i in range(n_cols):
         for j in range(i + 1, n_cols):
@@ -115,9 +149,13 @@ def learn_chow_liu_tree(df):
     T = nx.maximum_spanning_tree(G, weight='weight', algorithm='kruskal')
     return G, T
 
+
+# math math math!
 def empirical_entropy(prob_dict):
     return -sum(p * math.log(p + 1e-12, 2) for p in prob_dict.values() if p > 0)
 
+
+# math math math!
 def estimate_chow_liu_compression(df, T):
     cols = df.columns.tolist()
     root = cols[0]
@@ -149,6 +187,8 @@ def estimate_chow_liu_compression(df, T):
     total_bytes = data_bytes + model_bytes
     return total_bytes, data_bytes, model_bytes
 
+
+# here we used an inbuilt function taken from geeksfromgeeks to do gzip compression for our benchmarking
 def gzip_compress_size(file_path):
     orig_size = os.path.getsize(file_path)
     with open(file_path, 'rb') as f_in:
@@ -156,19 +196,6 @@ def gzip_compress_size(file_path):
     comp_size = len(compressed_data)
     return orig_size, comp_size
 
-def visualize_tree(T, filename):
-    pos = nx.spring_layout(T, seed=42, k=0.5, iterations=50)
-    fig, ax = plt.subplots(figsize=(10, 7))
-    weights = [T[u][v]['weight'] for u, v in T.edges()]
-    nx.draw(T, pos, with_labels=True, node_color='lightblue', node_size=2000, edge_color=weights, width=4.0, edge_cmap=plt.cm.Blues, font_size=10, font_weight='bold', ax=ax)
-    sm = plt.cm.ScalarMappable(cmap=plt.cm.Blues, norm=plt.Normalize(vmin=min(weights or [0]), vmax=max(weights or [1])))
-    cbar = fig.colorbar(sm, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)
-    cbar.set_label("Penalized Mutual Information (bits)", rotation=270, labelpad=15)
-    ax.set_title("Penalized Chow–Liu Dependency Tree", fontsize=14)
-    plt.tight_layout()
-    fig.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close(fig)
-    print(f"   ↳ Tree visualization saved as: {filename}")
 
 def sizeof_fmt(num, suffix="B"):
     for unit in ["", "K", "M", "G", "T"]:
@@ -178,18 +205,32 @@ def sizeof_fmt(num, suffix="B"):
     return f"{num:.1f} P{suffix}"
 
 def main():
-    os.makedirs("logs", exist_ok=True)
+    # makes a directory /logs and changes to it to append the csv files 
+    os.makedirs("logs", exist_ok=True) 
     os.chdir("logs")
+
+    # we made a list to store dataset on which we run the compression and we define it as (name, amt_corr, amt_rows)
     datasets = [("log_low.csv", 0.05, 1500), ("log_medium.csv", 0.60, 12000), ("log_high.csv", 0.95, 45000)]
+
+    # declare a results list to append the datasets generated from above list's template
     results = []
+
+    # we run a loop to go over different kinds of datasets to generate
     for fname, corr, n_rows in datasets:
         print(f"\n\033[94m[Dataset] {fname} (corr={corr}, rows={n_rows})\033[0m")
-        df = generate_synthetic_logs(n_rows, corr, fname)
-        G, T = learn_chow_liu_tree(df)
-        visualize_tree(T, fname.replace(".csv", "_tree.png"))
-        total_chow, data_chow, model_chow = estimate_chow_liu_compression(df, T)
-        orig_size, gzip_size = gzip_compress_size(fname)
+
+
+
+        df = generate_synthetic_logs(n_rows, corr, fname) #this is of importance, meet me at top where this function exists
+        G, T = learn_chow_liu_tree(df) #this is of importance, meet me at top where this function exists
+        total_chow, data_chow, model_chow = estimate_chow_liu_compression(df, T) #this is of importance, meet me at top where this function exists
+        orig_size, gzip_size = gzip_compress_size(fname) #this is of importance, meet me at top where this function exists
+
+
+
         results.append({"Dataset": fname, "Rows": n_rows, "Corr": corr, "Original": orig_size, "GZIP": gzip_size, "ChowLiu_Total": total_chow, "ChowLiu_Data": data_chow, "ChowLiu_Model": model_chow})
+
+
     res_df = pd.DataFrame(results)
     print("\n\033[95m===== Compression Summary =====\033[0m")
     print(res_df[['Dataset', 'Rows', 'Corr', 'Original', 'GZIP', 'ChowLiu_Total']].to_string(index=False))
