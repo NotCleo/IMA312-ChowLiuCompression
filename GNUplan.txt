@@ -1,0 +1,19 @@
+For GNU demo i am thinking.....,
+
+"We need to simulate a tabular structure, for which we laid down 3 audio files (.wav files, done as mono stereo, 8 bit precision and 8Khz sampling) and we have 3 audio file waveform(s) being our the three columns and its values over time as the row entries
+
+To perform the probabilistic compression, we need to find the empirical marginal probabilities, empirical joint distributions, empirical mutual information across the three columns (remember they are waveform(s))
+
+We need to demonstrate "collective compression of multiple audio files of same stereo and source", it's simpler explanation would be, 
+
+" If I record myself reading 3 different manuscripts, and i store all three wav files in a folder, how will i compress them collectively by leveraging the fact that my voice does not modulate much across different wav files, and some words are common probably between the different waveform(s), can this information be leverage to apply a stronger correlation, followed by a stronger compression ratio."
+
+"so idea is, we want to perform joint compression, like 3 different voice streams but same speaker speaking, so we have to pitch the idea that can we perform a combined compression as some words spoken would be common, like say suppose those three waveform(s) are audio recording of three professors, and all three audio files would have the part where they take attendance right? can that information across different waveform(s) being used to compress this combined directory under which they are stored more better"
+
+
+So what's the GNU block diagram flow? and what configurations to set up in each block?
+
+
+
+
+
